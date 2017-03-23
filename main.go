@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/elazarl/goproxy"
+	"github.com/duratarskeyk/goproxy"
 	"encoding/base64"
 	"flag"
 	"fmt"
