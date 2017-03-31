@@ -11,19 +11,19 @@ type HashTtl struct {
 	data  map[string]value
 	times map[string]int64
 	ttl   int64
-	mutex *sync.RWMutex
+	mutex *sync.Mutex
 }
 
 func NewHashTtl(ttl int64) *HashTtl {
 	return &HashTtl{data: make(map[string]value),
 		times: make(map[string]int64),
 		ttl:   ttl,
-		mutex: &sync.RWMutex{}}
+		mutex: &sync.Mutex{}}
 }
 
 func (h *HashTtl) get(key string) (value, bool) {
-	h.mutex.RLock()
-	defer h.mutex.RUnlock()
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
 
 	entry_time, present := h.times[key]
 	if !present {

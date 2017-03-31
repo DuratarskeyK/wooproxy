@@ -15,7 +15,7 @@ import (
 )
 
 var localToTransport map[string]*http.Transport
-var localToTransportMu sync.RWMutex
+var localToTransportMu sync.Mutex
 var remoteToLocal map[string]string
 var remoteToLocalMu sync.RWMutex
 
@@ -33,14 +33,13 @@ func ConnState(c net.Conn, state http.ConnState) {
 }
 
 func getTransportForLocalAddr(localAddr string) *http.Transport {
-	localToTransportMu.RLock()
+	localToTransportMu.Lock()
+	defer localToTransportMu.Unlock()
 	transport, ok := localToTransport[localAddr]
-	localToTransportMu.RUnlock()
 	if ok {
 		return transport
 	}
 
-	localToTransportMu.Lock()
 	transport = &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
@@ -51,7 +50,6 @@ func getTransportForLocalAddr(localAddr string) *http.Transport {
 		}).DialContext,
 	}
 	localToTransport[localAddr] = transport
-	localToTransportMu.Unlock()
 	return transport
 }
 
@@ -101,7 +99,7 @@ func main() {
 		return
 	}
 	localToTransport = make(map[string]*http.Transport)
-	localToTransportMu = sync.RWMutex{}
+	localToTransportMu = sync.Mutex{}
 	remoteToLocal = make(map[string]string)
 	remoteToLocalMu = sync.RWMutex{}
 	proxy := goproxy.NewProxyHttpServer()

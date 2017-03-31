@@ -1,0 +1,78 @@
+#! /bin/bash
+#
+# chkconfig: 2345 91 59
+### BEGIN INIT INFO
+# Provides: wooproxy
+# Required-Start: $network $syslog
+# Required-Stop: $network
+# Default-Start: 2 3 5
+# Default-Stop: 0 1 6
+# Description: Start or stop woo proxy
+### END INIT INFO
+
+
+# Source function library.
+. /etc/init.d/functions
+ 
+# See how we were called.
+
+start() {
+	echo -n $"Starting wooproxy: "	
+	status=`screen -ls | grep [0-9]*\.wooproxy`
+	if [ ! -z "$status" ]; then
+		echo -n $"cannot start wooproxy: woorpoxy is already running"
+		failure -n $"cannot start wooproxy: woorpoxy already running"
+		echo
+		return 1
+	fi
+	screen -dmS wooproxy /opt/wooproxy/entrypoint.sh
+	echo
+	return 0
+}
+
+stop() {
+	echo -n $"Stopping wooproxy: "
+	status=`screen -ls | grep [0-9]*\.wooproxy`
+	if [ -z "$status" ]; then
+	    echo -n $"cannot stop wooproxy: crond is not running."
+	    failure $"cannot stop wooproxy: crond is not running."
+	    echo
+	    return 1;
+	fi
+	screen -X -S wooproxy quit
+	echo
+	return 0
+}	
+
+rhstatus() {
+	status=`screen -ls | grep [0-9]*\.wooproxy`
+	if [ -z "$status" ]; then
+		echo "wooproxy isn't running"
+	else
+		echo "wooproxy is running"
+	fi
+}	
+
+restart() {
+  	stop
+	start
+}	
+
+case "$1" in
+  start)
+  	start
+	;;
+  stop)
+  	stop
+	;;
+  restart)
+  	restart
+	;;
+  status)
+  	rhstatus
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|status|restart}"
+	exit 1
+esac
+
